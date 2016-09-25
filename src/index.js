@@ -357,12 +357,24 @@ function getCharacterInfo(characterName) {
 * Alexa Speaks
 ********************************************************/
 
-function sayIntro() {}
-function sayInstructions() {}
-function sayCharacterRoles() {}
-function sayDayDeath() {}
-function sayNightDeath() {}
-function sayOutro() {}
+function sayIntro() {
+    console.log('sayIntro');
+}
+function sayInstructions() {
+    console.log('sayInstructions');
+}
+function sayCharacterRoles() {
+    console.log('sayCharacterRoles');
+}
+function sayDayDeath() {
+    console.log('sayDayDeath');
+}
+function sayNightDeath() {
+    console.log('sayNightDeath');
+}
+function sayOutro() {
+    console.log('sayOutro');
+}
 
 /*******************************************************
 * Intent Mappping
