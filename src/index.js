@@ -70,7 +70,8 @@ var config = {
         charactersAssigned: false,
         gameOver: false,
         villainWin: false,
-        heroWin: false
+        heroWin: false,
+        phase: 0
     },
     history: {
         askForNumberStart: null,
@@ -107,9 +108,96 @@ var config = {
         // Kill a player or Do nothing
 // End Game
 
+
+
+
+// chunked Game
+function startGame() {
+    config.history.phase = 0;
+    sayIntro();
+    sayInstructions();
+
+    config.history.askForNumberStart = Date.now();
+
+}
+
+function receivedPhoneNumbers() {
+    config.history.phase = 1;
+    config.history.askForNumberEnd = Date.now();
+    var players = getPlayersFromTwilio();
+
+    for (player in players) {
+        addPlayer(player.name, player.phoneNumber);
+    }
+
+    setCharacters();
+
+    startRound();
+}
+
+function startRound() {
+    config.history.phase = 2;
+    var roundHistory = {};  
+    var actions = [];
+    var votes = [];
+    config.protectedPlayers = []; // Clear protectedPlayers at start of each round
+    config.roundNumber = config.roundNumber++;
+
+    sayNightDeath(config.nightDeathCharacter);
+    sayStartDeliberation();
+}
+
+function endDeliberationStartVoting() {
+    config.history.phase = 3;
+    sayEndDeliberation();
+
+    roundHistory.dayKillVoteStart = Date.now();
+}
+
+function endVotingStartNight() {
+    config.history.phase = 4;
+    roundHistory.dayKillVoteEnd = Date.now();
+
+    votes = getPlayerVotesFromTwilio(roundHistory.dayKillVoteStart, roundHistory.dayKillVoteEnd);
+    var deadPlayerName = resolveVotes(votes);
+    resolveDeath(deadPlayerName);
+
+    sayDayDeath(deadPlayerName);
+
+    evaluateEndCondition();
+
+    if (config.state.gameOver) {
+        return;
+    }
+ 
+    roundHistory.nightActionStart = Date.now();
+    sayNightStart();
+}
+
+function endNight() {
+    config.history.phase = 5;
+    sayNightEnd();
+    roundHistory.nightActionEnd = Date.now();
+    config.history.rounds.push(roundHistory);
+
+    actions = getPlayerActionsFromTwilio(roundHistory.nightActionStart, roundHistory.nightActionEnd);
+    resolvePlayerActions(actions);
+    evaluateEndCondition();
+
+    if (!config.state.gameOver) {
+        this.emit('startRound');
+    }
+}
+
+
+// entire game -- not run anymore use broken up version above
 function mainGame() {
     sayIntro();
     sayInstructions();
+<<<<<<< HEAD
+=======
+
+>>>>>>> chunk the game into different sections to be triggered by intents
     config.history.askForNumberStart = Date.now();
 
     // pause // wait 30 seconds // Or get intent to continue
@@ -221,7 +309,7 @@ function protectPlayer(playerName) {
     config.protectedPlayerNames.push(playerName);
 }
 
-// Determine if game is over (more Werewolver)
+// Determine if game is over (more Werewolves)
 function evaluateEndCondition() {
     var villainCount;
     var heroCount;
@@ -417,14 +505,14 @@ function sayNightEnd() {
     console.log('sayNightEnd');
     this.emit(':tell', 'sayNightEnd');
 }
+
 /*******************************************************
 * Intent Mappping
 ********************************************************/
 
-
 var handlers = {
     'LaunchRequest': function () {
-        this.emit('StartGame');
+        this.emit('startGame');
     },
     'AMAZON.YES': function () {
         var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
@@ -435,15 +523,30 @@ var handlers = {
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
+    'PhoneNumberContinueIntent': function () {
+        this.emit('receivedPhoneNumbers');
+    },
+    'StartRoundIntent': function () {
+        this.emit('startRound');
+    },
+    'endDeliberationIntent': function () {
+        this.emit('endDeliberation');
+    },
+    'endVotingStartNightIntent': function () {
+        this.emit('endVotingStartNight');
+    },
+    'endNightIntent': function () {
+        this.emit('endNight');
+    },
     'AMAZON.HelpIntent': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var speechOutput = "You can say tell me we're ready to go, or, you can say exit... What can I help you with?";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
     'AMAZON.StopIntent': function () {
-        this.emit(':tell', 'Goodbye!');
+        this.emit(':tell', 'You are now leaving Catsville!');
     }
-};
+}
 
 /*******************************************************
 * Twilio Integration
@@ -524,8 +627,7 @@ function getPlayersFromTwilio() {
             name: name,
             phoneNumber: phoneNumber
 
-        },
-
+        }
     ]
 */
 }
