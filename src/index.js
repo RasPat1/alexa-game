@@ -6,6 +6,13 @@
 
 var Alexa = require('alexa-sdk');
 
+//Twilio info
+var accountSid = 'AC2a896186008e9b0cad3bdd16831006e7';
+var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
+var fromNumber = '6317598355';
+var client = require('twilio')(accountSid, authToken);
+
+
 //OPTIONAL: replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
 var APP_ID = undefined; 
 var SKILL_NAME = 'Catskill';
@@ -22,9 +29,9 @@ exports.handler = function(event, context, callback) {
 ********************************************************/
 
 var config = {
-    characterNames: {VILLAGER: 'villager', WEREWOLF: 'werewolf', DOCTOR: 'doctor'}
-    allCharacters: [characterNames.VILLAGER, characterNames.WEREWOLF, characterNames.DOCTOR],
-    characterActionExecutionOrder: [characterNames.VILLAGER, characterNames.DOCTOR, characterNames.WEREWOLF],
+    characterNames: {VILLAGER: 'villager', VILLAIN: 'werewolf', DOCTOR: 'doctor'}
+    allCharacters: [characterNames.VILLAGER, characterNames.VILLAIN, characterNames.DOCTOR],
+    characterActionExecutionOrder: [characterNames.VILLAGER, characterNames.DOCTOR, characterNames.VILLAIN],
     characters: [
         {
             name: characterNames.VILLAGER,
@@ -43,6 +50,12 @@ var config = {
             nightAction: ['kill'],
             description: ['You are a Werewolf! At night text the name of who you want to kill.'],
             isVillain: true
+        },
+            {
+            name: characterNames.SEER,
+            nightAction: ['see'],
+            description: ['You are a SEER! At night text the name of who you want to identify.'],
+            isVillain: false
         }
     ],
     players: [
@@ -131,6 +144,7 @@ function playRound() {
 
     sayNightDeath();
     startDeliberation();
+    // Pause for a bit
     endDeliberation();
 
     roundHistory.dayKillVoteStart = Date.now();
@@ -138,10 +152,10 @@ function playRound() {
     roundHistory.dayKillVoteEnd = Date.now();
 
     votes = getPlayerVotesFromTwilio(roundHistory.dayKillVoteStart, roundHistory.dayKillVoteEnd);
-    var deadPlayer = resolveVotes(votes);(
+    var deadPlayerName = resolveVotes(votes);
     resolveDeath(deadPlayerName);
 
-    sayDayDeath();
+    sayDayDeath(deadPlayerName);
 
     evaluateEndCondition();
 
@@ -201,6 +215,7 @@ function killPlayer(name) {
     } else {
         var playerObj = getPlayerInfo(name, 'name');
         playerObj.isAlive = false;
+        
     }
 }
 
@@ -234,7 +249,7 @@ function evaluateEndCondition() {
     config.state.gameOver = villainWin || heroWin;
 }
 
-function VotesDeath(votes) {
+function resolveVotes(votes) {
     var max = -1;
     var voteCounts = {};
     var playerName;
@@ -263,6 +278,12 @@ function resolveDeath(name) {
 }
 
 function resolvePlayerActions(actions) {
+    // Augment action to include character for easier sorting
+    for (var action in actions) {
+        var playerInfo = getPlayerInfo(action.phoneNumber, 'number');
+        action.character = playerInfo.character;
+    }
+
     sortByCharacterPriority(actions); // TODO check that the sort modifies the array
 
     for (action in actions) {
@@ -271,17 +292,18 @@ function resolvePlayerActions(actions) {
 }
 
 
-// TODO: Need validation here! action.plaerAction is overloaded
+// TODO: Need validation here! action.playerAction is overloaded
 function executeAction(action) {
-    if (action.character == config.character.WEREWOLF) {
+    var player = getPlayerInfo(action.playerName, 'name');
+
+    if (player.character == config.character.WEREWOLF) {
         var name = action.playerAction;
         killPlayer(name);
-    } else if (action.character == config.character.VILLAGER) {
-        var playerInfo = getPlayerInfo(action.playerName, 'name');
-        playerInfo.customDeath = action.playerAction;
-    } else if (action.character == config.character.DOCTOR) {
-        var name = action.playerAction;
-        protectPlayer(name);
+    } else if (player.character == config.character.VILLAGER) {
+        player.customDeath = action.playerAction;
+    } else if (player.character == config.character.DOCTOR) {
+        var protecteeName = action.playerAction;
+        protectPlayer(protecteeName);
     }
 }
 
@@ -436,6 +458,36 @@ var handlers = {
 /*******************************************************
 * Twilio Integration
 ********************************************************/
+// Twilio log getter
+function getTwilioJSON(lowerTimeBound, upperTimeBound, gameContext){
+    var gameContainer = [];
+    var twilioJSON = client.messages.list({to: fromNumber}, function(err, data) {
+        data.messages.forEach(function(message) {
+            var messageTime = Date.parse(message.dateSent);
+            if ( messageTime > lowerTimeBound && messageTime < upperTimeBound ){
+            switch (gameContext){
+                case "Action":
+                    gameContainer.push({target: message.body, number: message.from});
+                    break;
+                case "Start":
+                    gameContainer.push({name: message.body, number: message.from});
+                    break;               
+                }
+            }
+        });
+    });   
+    return gameContainer;
+}
+
+function sendTwilioText(playerNumber, message){
+    client.messages.create({ 
+    to: playerNumber, 
+    from: fromNumber, 
+    body: message, 
+    }, function(err, message) { 
+        console.log(message.sid); 
+    }); 
+}
 
 // Formats names to be predictable in app
 function sanitizeNames(name) {
@@ -458,10 +510,10 @@ function getPlayersFromTwilio() {
     var startWindow = config.history.askForNumberStart;
     var endWindow = config.history.askForNumberEnd;
 
-    // idk how to process these...
-    var messages = getMessagesFromTwilio(startWindow, endWindow);
 
-    var players;
+    // idk how to process these...
+    return getTwilioJSON(startWindow, endWindow, "Start");
+
 
     /*
     players = [
@@ -478,23 +530,52 @@ function getPlayersFromTwilio() {
 
     ]
 */
-    return players;
 }
 
 function getPlayerVotesFromTwilio() {
+    var votes = [];
     var startWindow = config.history.nightActionStart;
     var endWindow = config.history.nightActionStart;
-
     // idk how to process these...
-    var messages = getMessagesFromTwilio(startWindow, endWindow);
+    return getTwilioJSON(startWindow, endWindow, "Action");
+
+
+
+    /*
+    votes = [
+        {
+            name: name,
+        },
+        {
+            name: name,
+        },
+
+    ]
+    */
 
 }
 
 function getPlayerActionsFromTwilio() {
+    var playerActions = [];
     var startWindow = config.history.dayKillVoteStart;
     var endWindow = config.history.dayKillVoteEnd;
-
     // idk how to process these...
-    var messages = getMessagesFromTwilio(startWindow, endWindow);
+    return getTwilioJSON(startWindow, endWindow, "Action");
+
+
+    /*
+    playerActions = [
+        {
+            phoneNumber: phoneNumber,
+            playerAction: playerAction
+
+        },
+        {
+            phoneNumber: phoneNumber,
+            playerAction: playerAction
+        },
+
+    ]
+*/
 
 }
