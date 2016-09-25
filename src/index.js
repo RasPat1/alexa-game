@@ -378,8 +378,8 @@ function shuffle(array) {
 ********************************************************/
 
 function sayIntro() {
-    console.log('sayIntro');
-    this.emit(':tell', 'sayIntro');
+    var speechOutput = "asdf";
+    this.emit(':tell', speechOutput);
 }
 function sayInstructions() {
     console.log('sayInstructions');
@@ -427,16 +427,16 @@ var handlers = {
         this.emit('StartGame');
     },
     'AMAZON.YES': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var speechOutput = "You said it buddy.";
         var reprompt = "What can I help you with?";
     },
     'AMAZON.NO': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var speechOutput = "NO NO NO NO NO NO NO";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
     'AMAZON.HelpIntent': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var speechOutput = "NO ONE CAN HEAR YOUR MEOW";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
