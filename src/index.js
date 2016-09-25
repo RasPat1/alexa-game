@@ -17,29 +17,29 @@ exports.handler = function(event, context, callback) {
     alexa.execute();
 };
 
-
 /*******************************************************
 * Game State
 ********************************************************/
 
 var config = {
-    allCharacters: ['villager', 'werewolf', 'doctor'],
-    characterActionExecutionOrder: ['villager', 'doctor', 'werewolf']
+    characterNames: {VILLAGER: 'villager', WEREWOLF: 'werewolf', DOCTOR: 'doctor'}
+    allCharacters: [characterNames.VILLAGER, characterNames.WEREWOLF, characterNames.DOCTOR],
+    characterActionExecutionOrder: [characterNames.VILLAGER, characterNames.DOCTOR, characterNames.WEREWOLF],
     characters: [
         {
-            name: 'villager',
+            name: characterNames.VILLAGER,
             nightAction: ['run', 'hide'],
-            description: ['You are a villager! At night text how you want to to do! For example: \'Hide in the shed\''],
+            description: ['You are a villager! At night text what you want to to do! For example: \'Hide in the shed\''],
             isVillain: false
         },
-        {   
-            name: 'doctor',
-            nightAction: ['save'],
-            description: ['You are a Doctor! At night text the name of who you want to save.'],
+        {
+            name: characterNames.DOCTOR,
+            nightAction: ['protect'],
+            description: ['You are a Doctor! At night text the name of who you want to protect.'],
             isVillain: false
         },
-        {   
-            name: 'werewolf',
+        {
+            name: characterNames.VILLAIN,
             nightAction: ['kill'],
             description: ['You are a Werewolf! At night text the name of who you want to kill.'],
             isVillain: true
@@ -51,7 +51,8 @@ var config = {
                 number: "7732264075",
                 character: 'werewolf',
                 name: 'Ras',
-                alive: true
+                isAlive: true,
+                customDeath: 'Hide in Shed' // Optional for funnier death messages (usually villagers)
             }
         */
     ],
@@ -59,9 +60,57 @@ var config = {
     state: {
         charactersAssigned: false,
         gameOver: false,
-        villainsWin: false
+        villainWin: false,
+        heroWin: false
     }
-    
+};
+
+
+/*******************************************************
+* Game Flow
+********************************************************/
+
+// Start Game
+// Add Players
+// Assign Characters
+// Loop
+    // Tell what happened last night
+    // Start deliberation
+    // Kill a player via the mob
+    // Transition to night
+    // Get player actions
+    // Resolve player Action effects
+        // Kill a player or Do nothing
+// End Game
+
+function mainGame() {
+    sayIntro();
+    sayInstructions();
+    // pause // TODO: How do we handle app state stuff?
+    var players = getPlayersFromTwilio();
+
+    for (player in players) {
+        addPlayer(player.content, player.phoneNumbers);
+    }
+
+    setCharacters();
+
+    while (!config.state.gameOver) {
+        playRound();
+    }
+
+    sayOutro();
+}
+
+function playRound() {
+    config.protectedPlayers = []; // clear protectedPlayers at start of each round
+
+    sayNightDeath();
+    startDeliberation();
+    openUpForTexts();
+    // Pause. ToDo: Need way of making async behavior synchronous
+    resolvePlayerActions();
+    evaluateEndCondition();
 }
 
 
@@ -74,7 +123,7 @@ function addPlayer(name, phoneNumber) {
     var newPlayer = {
         number: phoneNumber,
         name: name.toLowerCase(),
-        alive: true
+        isAlive: true
     };
 
     config.players.append(newPlayer);
@@ -118,7 +167,7 @@ function evaluateEndCondition() {
     var heroCount;
 
     for (player in config.players) {
-        if (player.alive) {
+        if (player.isAlive) {
             var characterInfo = getCharacterInfo(player.character);
 
             if (characterInfo.isVillain == true) {
@@ -133,8 +182,67 @@ function evaluateEndCondition() {
     var heroWin = villainCount == 0;
 
     config.state.villainWin = villainWin;
-    config.state.herosWin = heroWin;
+    config.state.heroWin = heroWin;
     config.state.gameOver = villainWin || heroWin;
+}
+
+function resolvePlayerActions() {
+    var actions = getPlayerActions();
+
+    sortByCharacterPriority(actions); // TODO check that the sort modifies the array
+
+    for (action in actions) {
+        executeAction(action);
+    }
+}
+
+
+// TODO: Need validation here! action.plaerAction is overloaded
+function executeAction(action) {
+    if (action.character == config.character.WEREWOLF) {
+        var name = action.playerAction;
+        killPlayer(name);
+    } else if (action.character == config.character.VILLAGER) {
+        var playerInfo = getPlayerInfo(action.playerName, 'name');
+        playerInfo.customDeath = action.playerAction;
+    } else if (action.character == config.character.DOCTOR) {
+        var name = action.playerAction;
+        protectPlayer(name);
+    }
+}
+
+/*******************************************************
+* GamePlay Utility Functions
+********************************************************/
+
+
+function getPlayerActions() {
+    var actions = [];
+    var payloads = getTwilioPayloads();
+
+    for (payload in payloads) {
+        var playerNumber = payload.phoneNumber;
+        var playerAction = payload.action;
+        var playerInfo = getPlayerInfo(playerNumber, 'number');
+
+        var actionObj = {
+            playerName: playerInfo.name,
+            character: playerInfo.character,
+            action: playerAction
+        }
+        
+        actions.append(actionObj);
+    }
+
+    return actions;
+}
+
+function sortByCharacterPriority(actions) {
+    var order = config.characterActionExecutionOrder;
+
+    actions.sort(function(a, b) {
+        return order.indexOf(b.character) - order.indexOf(a.character);
+    });
 }
 
 function getPlayerInfo(value, prop) {
@@ -161,94 +269,6 @@ function getCharacterInfo(characterName) {
 
     // TODO: Error handling for no characer info found
     return characterInfo;
-}
-
-/*******************************************************
-* Game Flow
-********************************************************/
-
-// Start Game
-// Add Players
-// Assign Characters
-// Loop
-    // Tell what happened last night
-    // Start deliberation
-    // Kill a player via the mob
-    // Transition to night
-    // Get player actions
-    // Resolve player Action effects
-        // Kill a player or Do nothing
-// End Game
-
-function mainGame() {
-    sayIntro();
-    sayInstructions();
-    // pause
-    var players = getPlayersFromTwilio();
-
-    for (player in players) {
-        addPlayer(player.content, player.phoneNumbers);
-    }
-
-    setCharacters();
-
-
-    while (!config.state.gameOver) {
-        playRound();
-    }
-
-    sayOutro();
-}
-
-function playRound() {
-    config.protectedPlayers = []; // clear protectedPlayers at start of each round
-
-    sayNightDeath();
-    startDeliberation();
-    openUpForTexts();
-    // Pause. ToDo: Need way of making async behavior synchronous
-    resolvePlayerActions();
-    evaluateEndCondition();
-}
-
-function resolvePlayerActions() {
-    var actions = getPlayerActions();
-
-    sortByCharacterPriority(actions); // TODO check that the sort modifies the array
-
-    for (action in actions) {
-        executeAction(action);
-    }
-}
-
-function getPlayerActions() {
-    var actions = []
-    var payloads = getTwilioPayloads()
-    for (payload in payloads) {
-        var playerNumber = payload.phoneNumber;
-        var playerAction = payload.action;
-        var playerInfo = getPlayerInfo(playerNumber, 'number');
-
-        var actionObj = {
-            playerName: playerInfo.name,
-            character: playerInfo.character,
-            characterAction
-            action: playerAction
-        }
-        
-        actions.append(actionObj);
-    }
-
-    return actions;
-}
-
-
-function sortByCharacterPriority(actions) {
-    var order = config.characterActionExecutionOrder;
-
-    actions.sort(function(a, b) {
-        return order.indexOf(b.character) - order.indexOf(a.character);
-    });
 }
 
 /*******************************************************
@@ -338,20 +358,6 @@ var handlers = {
         this.emit(':tell', 'Goodbye!');
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*******************************************************
 * Twilio Integration
