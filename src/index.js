@@ -13,7 +13,7 @@ var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
 //OPTIONAL: replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
-var APP_ID = undefined; 
+var APP_ID = "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793"; 
 var SKILL_NAME = 'Catskill';
 
 exports.handler = function(event, context, callback) {

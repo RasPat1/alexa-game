@@ -7,7 +7,7 @@ module.exports = {
       "userId": null
     },
     "application": {
-      "applicationId": "amzn1.echo-sdk-ams.app.[unique-value-here]"
+      "applicationId": "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793"
     }
   },
   "version": "1.0",
