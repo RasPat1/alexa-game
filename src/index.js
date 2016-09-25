@@ -1,4 +1,4 @@
-¡'use strict';
+'use strict';
 
 /*******************************************************
 * Intialize App
@@ -12,7 +12,7 @@ var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
 var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
-var APP_ID = "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793";
+var APP_ID = "amzn1.ask.skill.78c5e44b-3bb9-4710-a59d-cb8a34d32793";
 var SKILL_NAME = 'Catskill';
 
 exports.handler = function(event, context, callback) {
