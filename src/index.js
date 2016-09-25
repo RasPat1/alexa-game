@@ -57,6 +57,7 @@ var config = {
         */
     ],
     protectedPlayerNames: [],
+    nightDeathCharacter: null, // updated everynight if someon died
     state: {
         roundNumber: 0,
         charactersAssigned: false,
@@ -126,13 +127,13 @@ function playRound() {
     var roundHistory = {};
     var actions = [];
     var votes = [];
-    config.protectedPlayers = []; // clear protectedPlayers at start of each round
+    config.protectedPlayers = []; // Clear protectedPlayers at start of each round
     config.roundNumber = config.roundNumber++;
 
-    sayNightDeath();
-    startDeliberation();
+    sayNightDeath(config.nightDeathCharacter);
+    sayStartDeliberation();
     // Pause for a bit
-    endDeliberation();
+    sayEndDeliberation();
 
     roundHistory.dayKillVoteStart = Date.now();
     // Pause. ToDo: Need way of making async behavior synchronous
@@ -155,7 +156,7 @@ function playRound() {
     // pause ToDo: Need way of making async behavior synchronous
     sayNightEnd();
     roundHistory.nightActionEnd = Date.now();
-    config.config.history.rounds.append(roundHistory);
+    config.history.rounds.append(roundHistory);
 
     actions = getPlayerActionsFromTwilio(roundHistory.nightActionStart, roundHistory.nightActionEnd);
     resolvePlayerActions(actions);
@@ -183,6 +184,7 @@ function addPlayer(name, phoneNumber) {
 function setCharacters() {
     if (config.charactersAssigned == true) {
         // TODO: Handle Error
+        return;
     }
 
     var allCharacters = config.allCharacters // getCharacterConfig(int numberOfCharacters)
@@ -198,10 +200,12 @@ function setCharacters() {
 // Kill a player
 function killPlayer(name) {
     if (config.protectedPlayerNames.indexOf(name) > -1) {
-        // player does not die
+        config.nightDeathCharacter = null;
+        // player does not die, let game know the night was safe
     } else {
         var playerObj = getPlayerInfo(name, 'name');
         playerObj.isAlive = false;
+        config.nightDeathCharacter = name;
     }
 }
 
@@ -375,7 +379,18 @@ function sayNightDeath() {
 function sayOutro() {
     console.log('sayOutro');
 }
-
+function sayStartDeliberation() {
+    console.log('sayStartDeliberation');
+}
+function sayEndDeliberation() {
+    console.log('sayEndDeliberation');
+}
+function sayNightStart() {
+    console.log('sayNightStart');
+}
+function sayNightEnd() {
+    console.log('sayNightEnd');
+}
 /*******************************************************
 * Intent Mappping
 ********************************************************/
