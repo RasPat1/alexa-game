@@ -12,8 +12,8 @@ var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
 var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
-//OPTIONAL: replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
-var APP_ID = "amzn1.ask.skill.78c5e44b-3bb9-4710-a59d-cb8a34d32793"; 
+//OPTIONAL: replace with "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793";
+var APP_ID = "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793"; 
 var SKILL_NAME = 'Catskill';
 
 exports.handler = function(event, context, callback) {
@@ -372,47 +372,6 @@ function shuffle(array) {
         array[i - 1] = array[j];
         array[j] = x;
     }
-}
-
-/*******************************************************
-* Alexa Speaks
-********************************************************/
-
-function sayIntro() {
-    var speechOutput = "asdf";
-    this.emit(':tell', speechOutput);
-}
-function sayInstructions() {
-    console.log('sayInstructions');
-    this.emit(':tell', 'sayInstructions');
-}
-function sayCharacterRoles() {
-    console.log('sayCharacterRoles');
-    this.emit(':tell', 'sayCharacterRoles');
-}
-function sayDayDeath() {
-    console.log('sayDayDeath');
-    this.emit(':tell', 'sayDayDeath');
-}
-function sayNightDeath() {
-    console.log('sayNightDeath');
-    this.emit(':tell', 'sayNightDeath');
-}
-function sayOutro() {
-    console.log('sayOutro');
-    this.emit(':tell', 'sayOutro');
-}
-function sayEndDeliberation() {
-    console.log('sayEndDeliberation');
-    this.emit(':tell', 'sayEndDeliberation');
-}
-function sayNightStart() {
-    console.log('sayNightStart');
-    this.emit(':tell', 'sayNightStart');
-}
-function sayNightEnd() {
-    console.log('sayNightEnd');
-    this.emit(':tell', 'sayNightEnd');
 }
 
 /*******************************************************
