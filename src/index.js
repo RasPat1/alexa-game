@@ -12,7 +12,6 @@ var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
 var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
-//OPTIONAL: replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
 var APP_ID = "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793";
 var SKILL_NAME = 'Catskill';
 
@@ -70,7 +69,8 @@ var config = {
         charactersAssigned: false,
         gameOver: false,
         villainWin: false,
-        heroWin: false
+        heroWin: false,
+        phase: 0
     },
     history: {
         askForNumberStart: null,
@@ -107,13 +107,15 @@ var config = {
         // Kill a player or Do nothing
 // End Game
 
-function mainGame() {
-    sayIntro();
-    sayInstructions();
-    config.history.askForNumberStart = Date.now();
 
-    // pause // wait 30 seconds // Or get intent to continue
-    // Alexa Pause
+// chunked Game
+function startGame() {
+    config.history.phase = 0;
+    config.history.askForNumberStart = Date.now();
+}
+
+function receivedPhoneNumbers() {
+    config.history.phase = 1;
     config.history.askForNumberEnd = Date.now();
     var players = getPlayersFromTwilio();
 
@@ -123,53 +125,51 @@ function mainGame() {
 
     setCharacters();
 
-    while (!config.state.gameOver) {
-        playRound();
-    }
-
-    sayOutro();
+    startRound();
 }
 
-function playRound() {
-    var roundHistory = {};
+function startRound() {
+    config.history.phase = 2;
+    var roundHistory = {};  
     var actions = [];
     var votes = [];
     config.protectedPlayers = []; // Clear protectedPlayers at start of each round
     config.roundNumber = config.roundNumber++;
+}
 
-    sayNightDeath(config.nightDeathCharacter);
-    sayStartDeliberation();
-    // Pause for a bit
-    sayEndDeliberation();
-
+function endDeliberationStartVoting() {
+    config.history.phase = 3;
     roundHistory.dayKillVoteStart = Date.now();
-    // Pause. ToDo: Need way of making async behavior synchronous
+}
+
+function endVotingStartNight() {
+    config.history.phase = 4;
     roundHistory.dayKillVoteEnd = Date.now();
 
     votes = getPlayerVotesFromTwilio(roundHistory.dayKillVoteStart, roundHistory.dayKillVoteEnd);
     var deadPlayerName = resolveVotes(votes);
     resolveDeath(deadPlayerName);
 
-    sayDayDeath(deadPlayerName);
-
     evaluateEndCondition();
 
-    if (config.state.gameOver) {
-        return;
-    }
-
     roundHistory.nightActionStart = Date.now();
-    sayNightStart();
-    // pause ToDo: Need way of making async behavior synchronous
-    sayNightEnd();
+}
+
+function endNight() {
+    config.history.phase = 5;
+    
     roundHistory.nightActionEnd = Date.now();
     config.history.rounds.push(roundHistory);
 
     actions = getPlayerActionsFromTwilio(roundHistory.nightActionStart, roundHistory.nightActionEnd);
     resolvePlayerActions(actions);
     evaluateEndCondition();
-}
 
+    // there's going to be a bug here
+    if (!config.state.gameOver) {
+        startRound();
+    }
+}
 
 /*******************************************************
 * Game Play Functions
@@ -221,7 +221,7 @@ function protectPlayer(playerName) {
     config.protectedPlayerNames.push(playerName);
 }
 
-// Determine if game is over (more Werewolver)
+// Determine if game is over (more Werewolves)
 function evaluateEndCondition() {
     var villainCount;
     var heroCount;
@@ -372,41 +372,27 @@ function shuffle(array) {
         array[j] = x;
     }
 }
+// ALexa Speaks
 
-/*******************************************************
-* Alexa Speaks
-********************************************************/
+// function sayInstructions() {
+//     this.emit(':tell', 'If you do not know, now you know.');
+// }
+// function sayCharacterRoles() {
+//     this.emit(':tell', 'if you do not know, now you know.');
+// }
 
-function sayIntro() {
-    console.log('sayIntro');
-    this.emit(':tell', 'Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. Sheriff Katz {need better name} was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose! The town doctor has concurred that the killer is suffering from Rabies Nocturnum, a rare form of the disease that only displays symptoms at night. What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. All players, text your name to {phone number} to begin the cat hunt.
-    ');
-}
-function sayInstructions() {
-    console.log('sayInstructions');
-    this.emit(':tell', 'If you do not know, now you know.');
-}
-function sayCharacterRoles() {
-    console.log('sayCharacterRoles');
-    this.emit(':tell', 'if you do not know, now you know.');
-}
-function sayDayDeath() {
-    console.log('sayDayDeath');
-    this.emit(':tell', '{person with the most votes}, you have been found wanted. It is to be death by yarn strangulation! Unfortunately, we can’t know if that was the right decision. No turning back now.
-    ');
-}
-function sayNightDeath() {
-    console.log('sayNightDeath');
-    this.emit(':tell', 'Night death!');
-}
-function sayOutro() {
-    console.log('sayOutro');
-    this.emit(':tell', 'Life moves on. Cats will endure!');
-}
-function sayStartDeliberation() {
-    console.log('sayStartDeliberation');
-    this.emit(':tell', 'You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
-}
+// function sayNightDeath() {
+//     console.log('sayNightDeath');
+//     this.emit(':tell', 'Night death!');
+// }
+// function sayOutro() {
+//     console.log('sayOutro');
+//     this.emit(':tell', 'Life moves on. Cats will endure!');
+// }
+// function sayStartDeliberation() {
+//     console.log('sayStartDeliberation');
+//     this.emit(':tell', 'You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
+// }
 function sayEndDeliberation() {
     console.log('sayEndDeliberation');
     this.emit(':tell', 'Times up. Send in your vote now!');
@@ -423,29 +409,57 @@ function sayNightEnd() {
 * Intent Mappping
 ********************************************************/
 
-
 var handlers = {
     'LaunchRequest': function () {
-        this.emit('StartGame');
+        startGame();
+        this.emit(':tell', 'Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. Sheriff Katz {need better name} was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose! The town doctor has concurred that the killer is suffering from Rabies Nocturnum, a rare form of the disease that only displays symptoms at night. What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. All players, text your name to {phone number} to begin the cat hunt.');
+        this.emit(':tell', 'sayInstructions');
     },
-    'AMAZON.YES': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
-        var reprompt = "What can I help you with?";
+    'PhoneNumberContinueIntent': function () {
+        receivedPhoneNumbers();
+        this.emit(':tell', 'Night death!');
+        this.emit(':tell', 'You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
     },
-    'AMAZON.NO': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
-        var reprompt = "What can I help you with?";
-        this.emit(':ask', speechOutput, reprompt);
+    // 'StartRoundIntent': function () {
+    //     startRound();
+        
+    // },
+    'endDeliberationIntent': function () {
+        endDeliberation();
+        this.emit(':tell', 'Times up. Send in your vote now!');
     },
-    'AMAZON.HelpIntent': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+    'endVotingStartNightIntent': function () {
+        endVotingStartNight();
+        if (config.state.gameOver) {
+            this.emit(':tell', 'Life moves on. Cats will endure!');
+        } else {
+            this.emit(':tell', '{person with the most votes}, you have been found wanted. It is to be death by yarn strangulation! Unfortunately, we can’t know if that was the right decision. No turning back now.');
+            this.emit(':tell', 'Night has fallen.');
+        }
+    },
+    'endNightIntent': function () {
+        endNight();
+        this.emit(':tell', 'Here comes the sun!');
+    },
+    'AMAZON.YesIntent': function () {
+        var speechOutput = "You said it buddy.";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
     'AMAZON.StopIntent': function () {
-        this.emit(':tell', 'Goodbye!');
+        this.emit(':tell', 'You are now leaving Catsville!');
+    },
+    'AMAZON.NoIntent': function () {
+        var speechOutput = "NO NO NO NO NO NO NO";
+        var reprompt = "What can I help you with?";
+        this.emit(':ask', speechOutput, reprompt);
+    },
+    'AMAZON.HelpIntent': function () {
+        var speechOutput = "NO ONE CAN HEAR YOUR MEOW";
+        var reprompt = "What can I help you with?";
+        this.emit(':ask', speechOutput, reprompt);
     }
-};
+}
 
 /*******************************************************
 * Twilio Integration
@@ -526,8 +540,7 @@ function getPlayersFromTwilio() {
             name: name,
             phoneNumber: phoneNumber
 
-        },
-
+        }
     ]
 */
 }
@@ -581,4 +594,4 @@ function getPlayerActionsFromTwilio() {
 * Run Main game
 ********************************************************/
 
-mainGame();
+// mainGame();
