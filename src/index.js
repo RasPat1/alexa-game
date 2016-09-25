@@ -110,8 +110,8 @@ var config = {
 function mainGame() {
     sayIntro();
     sayInstructions();
-    // pause // TODO: How do we handle app state stuff?
     config.history.askForNumberStart = Date.now();
+
     // pause // wait 30 seconds // Or get intent to continue
     // Alexa Pause
     config.history.askForNumberEnd = Date.now();
@@ -308,7 +308,6 @@ function executeAction(action) {
 * GamePlay Utility Functions
 ********************************************************/
 
-
 function getPlayerActions() {
     var actions = [];
     var payloads = getTwilioPayloads();
@@ -380,33 +379,43 @@ function shuffle(array) {
 
 function sayIntro() {
     console.log('sayIntro');
+    this.emit(':tell', 'sayIntro');
 }
 function sayInstructions() {
     console.log('sayInstructions');
+    this.emit(':tell', 'sayInstructions');
 }
 function sayCharacterRoles() {
     console.log('sayCharacterRoles');
+    this.emit(':tell', 'sayCharacterRoles');
 }
 function sayDayDeath() {
     console.log('sayDayDeath');
+    this.emit(':tell', 'sayDayDeath');
 }
 function sayNightDeath() {
     console.log('sayNightDeath');
+    this.emit(':tell', 'sayNightDeath');
 }
 function sayOutro() {
     console.log('sayOutro');
+    this.emit(':tell', 'sayOutro');
 }
 function sayStartDeliberation() {
     console.log('sayStartDeliberation');
+    this.emit(':tell', 'sayStartDeliberation');
 }
 function sayEndDeliberation() {
     console.log('sayEndDeliberation');
+    this.emit(':tell', 'sayEndDeliberation');
 }
 function sayNightStart() {
     console.log('sayNightStart');
+    this.emit(':tell', 'sayNightStart');
 }
 function sayNightEnd() {
     console.log('sayNightEnd');
+    this.emit(':tell', 'sayNightEnd');
 }
 /*******************************************************
 * Intent Mappping
@@ -417,68 +426,19 @@ var handlers = {
     'LaunchRequest': function () {
         this.emit('StartGame');
     },
-    'GetTwilioTextIntent': function(payload) {
-        var textMessage = payload.content;
-        var playerPhoneNumber = payload.from;
-
-        var currentPhase = getCurrentPhase();
-
-        if (currentPhase == 'getNames') {
-            var totalCount = addNewName(textMessage, playerPhoneNumber);
-            this.emit(':tell', "There are " + totalCount + " Players");
-        } else if (currentPhase == 'getActions') {
-            addNewAction(textMessage, playerPhoneNumber);
-        }
+    'AMAZON.YES': function () {
+        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var reprompt = "What can I help you with?";
     },
-    'GetAllPlayersReadyIntent': function() {
-        // send out character roles
-        // TWILIO STUFF
-        var charCount = getCharacterCount();
-
-        // gets teh list of characters for this number of players
-        var characters = getCharacterList(charCount);
-        var players = getPlayerNumberList();
-
-        var shuffledCharacters = shuffle(characters);
-        var shuffledPlayers = shuffle(players);
-
-        for (var i = 0; i < shuffledCharacters.length; i++) {
-            var selectedCharacter = shuffledCharacters[i];
-            var selectedPlayer = shuffledPlayer[i];
-
-            // addCharacter
-            addCharacter(selectedPlayer, selectedCharacter);
-            textCharacter(selectedPlayer, getCharacterText(selectedCharacter));
-        }
-
-        
-
-
-    },
-    'AllCharactersAssignedIntent': function() {
-
-
-    },
-    'startGame': function() {
-        var getNumber = StartGame.getNumber();
-
-        var welcomeMessage = "Welcome to Catskill! The game where you try to kill your friends... with Cats!"
-        var sceneSetUp = "A small village outisde mountains. A peaceful town. A town made of cats.";
-        var number = getTwilioPhoneNumber();
-
-        var testInstructions = "Text your name to the following number" + number;
-
-        var fullStartMessage = welcomeMessage + sceneSetUp + testInstructions;
-
-        this.emit(':tell', fullStartMessage);
+    'AMAZON.NO': function () {
+        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var reprompt = "What can I help you with?";
+        this.emit(':ask', speechOutput, reprompt);
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
-    },
-    'AMAZON.CancelIntent': function () {
-        this.emit(':tell', 'Goodbye!');
     },
     'AMAZON.StopIntent': function () {
         this.emit(':tell', 'Goodbye!');
@@ -575,10 +535,6 @@ function getPlayerVotesFromTwilio() {
     var startWindow = config.history.nightActionStart;
     var endWindow = config.history.nightActionStart;
 
-    // idk how to process these...
-    var messages = getMessagesFromTwilio(startWindow, endWindow);
-
-
    return getTwilioJSON(startWindow, endWindow, "Action");
 
 
@@ -599,9 +555,7 @@ function getPlayerActionsFromTwilio() {
     var startWindow = config.history.dayKillVoteStart;
     var endWindow = config.history.dayKillVoteEnd;
 
-    // idk how to process these...
     return getTwilioJSON(startWindow, endWindow, "Action");
-
 
     /*
     playerActions = [
