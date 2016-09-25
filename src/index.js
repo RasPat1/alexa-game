@@ -22,9 +22,9 @@ exports.handler = function(event, context, callback) {
 ********************************************************/
 
 var config = {
-    characterNames: {VILLAGER: 'villager', WEREWOLF: 'werewolf', DOCTOR: 'doctor'}
-    allCharacters: [characterNames.VILLAGER, characterNames.WEREWOLF, characterNames.DOCTOR],
-    characterActionExecutionOrder: [characterNames.VILLAGER, characterNames.DOCTOR, characterNames.WEREWOLF],
+    characterNames: {VILLAGER: 'villager', VILLAIN: 'werewolf', DOCTOR: 'doctor'}
+    allCharacters: [characterNames.VILLAGER, characterNames.VILLAIN, characterNames.DOCTOR],
+    characterActionExecutionOrder: [characterNames.VILLAGER, characterNames.DOCTOR, characterNames.VILLAIN],
     characters: [
         {
             name: characterNames.VILLAGER,
@@ -131,6 +131,7 @@ function playRound() {
 
     sayNightDeath();
     startDeliberation();
+    // Pause for a bit
     endDeliberation();
 
     roundHistory.dayKillVoteStart = Date.now();
@@ -138,10 +139,10 @@ function playRound() {
     roundHistory.dayKillVoteEnd = Date.now();
 
     votes = getPlayerVotesFromTwilio(roundHistory.dayKillVoteStart, roundHistory.dayKillVoteEnd);
-    var deadPlayer = resolveVotes(votes);(
+    var deadPlayerName = resolveVotes(votes);
     resolveDeath(deadPlayerName);
 
-    sayDayDeath();
+    sayDayDeath(deadPlayerName);
 
     evaluateEndCondition();
 
@@ -234,7 +235,7 @@ function evaluateEndCondition() {
     config.state.gameOver = villainWin || heroWin;
 }
 
-function VotesDeath(votes) {
+function resolveVotes(votes) {
     var max = -1;
     var voteCounts = {};
     var playerName;
@@ -263,6 +264,12 @@ function resolveDeath(name) {
 }
 
 function resolvePlayerActions(actions) {
+    // Augment action to include character for easier sorting
+    for (var action in actions) {
+        var playerInfo = getPlayerInfo(action.phoneNumber, 'number');
+        action.character = playerInfo.character;
+    }
+
     sortByCharacterPriority(actions); // TODO check that the sort modifies the array
 
     for (action in actions) {
@@ -271,17 +278,18 @@ function resolvePlayerActions(actions) {
 }
 
 
-// TODO: Need validation here! action.plaerAction is overloaded
+// TODO: Need validation here! action.playerAction is overloaded
 function executeAction(action) {
-    if (action.character == config.character.WEREWOLF) {
+    var player = getPlayerInfo(action.playerName, 'name');
+
+    if (player.character == config.character.WEREWOLF) {
         var name = action.playerAction;
         killPlayer(name);
-    } else if (action.character == config.character.VILLAGER) {
-        var playerInfo = getPlayerInfo(action.playerName, 'name');
-        playerInfo.customDeath = action.playerAction;
-    } else if (action.character == config.character.DOCTOR) {
-        var name = action.playerAction;
-        protectPlayer(name);
+    } else if (player.character == config.character.VILLAGER) {
+        player.customDeath = action.playerAction;
+    } else if (player.character == config.character.DOCTOR) {
+        var protecteeName = action.playerAction;
+        protectPlayer(protecteeName);
     }
 }
 
@@ -482,19 +490,51 @@ function getPlayersFromTwilio() {
 }
 
 function getPlayerVotesFromTwilio() {
+    var votes = [];
     var startWindow = config.history.nightActionStart;
     var endWindow = config.history.nightActionStart;
 
     // idk how to process these...
     var messages = getMessagesFromTwilio(startWindow, endWindow);
 
+
+    /*
+    votes = [
+        {
+            name: name,
+        },
+        {
+            name: name,
+        },
+
+    ]
+    */
+
+    return votes;
 }
 
 function getPlayerActionsFromTwilio() {
+    var playerActions = [];
     var startWindow = config.history.dayKillVoteStart;
     var endWindow = config.history.dayKillVoteEnd;
 
     // idk how to process these...
     var messages = getMessagesFromTwilio(startWindow, endWindow);
 
+    /*
+    playerActions = [
+        {
+            phoneNumber: phoneNumber,
+            playerAction: playerAction
+
+        },
+        {
+            phoneNumber: phoneNumber,
+            playerAction: playerAction
+        },
+
+    ]
+*/
+
+    return playerActions;
 }
