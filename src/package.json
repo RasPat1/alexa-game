@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/RasPat1/alexa-game#readme",
   "dependencies": {
-    "alexa-sdk": "^1.0.6"
+    "alexa-sdk": "^1.0.6",
+    "twilio": "^2.11.0"
   }
 }
