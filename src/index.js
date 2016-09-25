@@ -194,10 +194,7 @@ function endNight() {
 function mainGame() {
     sayIntro();
     sayInstructions();
-<<<<<<< HEAD
-=======
 
->>>>>>> chunk the game into different sections to be triggered by intents
     config.history.askForNumberStart = Date.now();
 
     // pause // wait 30 seconds // Or get intent to continue
@@ -514,15 +511,6 @@ var handlers = {
     'LaunchRequest': function () {
         this.emit('startGame');
     },
-    'AMAZON.YES': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
-        var reprompt = "What can I help you with?";
-    },
-    'AMAZON.NO': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
-        var reprompt = "What can I help you with?";
-        this.emit(':ask', speechOutput, reprompt);
-    },
     'PhoneNumberContinueIntent': function () {
         this.emit('receivedPhoneNumbers');
     },
@@ -545,6 +533,15 @@ var handlers = {
     },
     'AMAZON.StopIntent': function () {
         this.emit(':tell', 'You are now leaving Catsville!');
+    },
+    'AMAZON.YesIntent': function () {
+        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var reprompt = "What can I help you with?";
+    },
+    'AMAZON.NoIntent': function () {
+        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var reprompt = "What can I help you with?";
+        this.emit(':ask', speechOutput, reprompt);
     }
 }
 
