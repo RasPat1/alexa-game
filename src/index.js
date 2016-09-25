@@ -378,7 +378,18 @@ function shuffle(array) {
 * Alexa Speaks
 ********************************************************/
 
-
+function sayIntro() {
+    var speechOutput = "asdf";
+    this.emit(':tell', speechOutput);
+}
+function sayInstructions() {
+    console.log('sayInstructions');
+    this.emit(':tell', 'sayInstructions');
+}
+function sayCharacterRoles() {
+    console.log('sayCharacterRoles');
+    this.emit(':tell', 'sayCharacterRoles');
+}
 function sayDayDeath() {
     console.log('sayDayDeath');
     this.emit(':tell', 'sayDayDeath');
@@ -409,7 +420,7 @@ function sayNightEnd() {
 ********************************************************/
 
 var handlers = {
-    'LaunchRequest': function (req, res) {
+    'LaunchRequest': function () {
         startGame();
         this.emit(':tell', 'sayIntro');
         this.emit(':tell', 'sayInstructions');
@@ -440,20 +451,21 @@ var handlers = {
         endNight();
         this.emit(':tell', 'sayNightEnd');
     },
-    'AMAZON.HelpIntent': function () {
-        var speechOutput = "You can say tell me we're ready to go, or, you can say exit... What can I help you with?";
+    'AMAZON.YesIntent': function () {
+        var speechOutput = "You said it buddy.";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     },
     'AMAZON.StopIntent': function () {
         this.emit(':tell', 'You are now leaving Catsville!');
     },
-    'AMAZON.YesIntent': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
-        var reprompt = "What can I help you with?";
-    },
     'AMAZON.NoIntent': function () {
-        var speechOutput = "You can say tell me a space fact, or, you can say exit... What can I help you with?";
+        var speechOutput = "NO NO NO NO NO NO NO";
+        var reprompt = "What can I help you with?";
+        this.emit(':ask', speechOutput, reprompt);
+    },
+    'AMAZON.HelpIntent': function () {
+        var speechOutput = "NO ONE CAN HEAR YOUR MEOW";
         var reprompt = "What can I help you with?";
         this.emit(':ask', speechOutput, reprompt);
     }
