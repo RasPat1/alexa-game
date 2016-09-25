@@ -21,8 +21,9 @@ exports.handler = function(event, context, callback) {
 * Game State
 ********************************************************/
 
+var characterNames = {VILLAGER: 'villager', VILLAIN: 'werewolf', DOCTOR: 'doctor'};
+
 var config = {
-    characterNames: {VILLAGER: 'villager', VILLAIN: 'werewolf', DOCTOR: 'doctor'}
     allCharacters: [characterNames.VILLAGER, characterNames.VILLAIN, characterNames.DOCTOR],
     characterActionExecutionOrder: [characterNames.VILLAGER, characterNames.DOCTOR, characterNames.VILLAIN],
     characters: [
@@ -156,7 +157,7 @@ function playRound() {
     // pause ToDo: Need way of making async behavior synchronous
     sayNightEnd();
     roundHistory.nightActionEnd = Date.now();
-    config.history.rounds.append(roundHistory);
+    config.history.rounds.push(roundHistory);
 
     actions = getPlayerActionsFromTwilio(roundHistory.nightActionStart, roundHistory.nightActionEnd);
     resolvePlayerActions(actions);
@@ -176,7 +177,7 @@ function addPlayer(name, phoneNumber) {
         isAlive: true
     };
 
-    config.players.append(newPlayer);
+    config.players.push(newPlayer);
 }
 
 // Assign Characters once all players have been added
@@ -187,7 +188,7 @@ function setCharacters() {
         return;
     }
 
-    var allCharacters = config.allCharacters // getCharacterConfig(int numberOfCharacters)
+    var allCharacters = config.allCharacters // getCharacterConfig(var numberOfCharacters)
     var shuffledCharacters = shuffle(allCharacters);
 
     for (character in shuffledCharacters) {
@@ -211,7 +212,7 @@ function killPlayer(name) {
 
 // make a player unkillable
 function protectPlayer(playerName) {
-    config.protectedPlayerNames.append(playerName);
+    config.protectedPlayerNames.push(playerName);
 }
 
 // Determine if game is over (more Werewolver)
@@ -317,7 +318,7 @@ function getPlayerActions() {
             action: playerAction
         }
         
-        actions.append(actionObj);
+        actions.push(actionObj);
     }
 
     return actions;
@@ -334,14 +335,14 @@ function sortByCharacterPriority(actions) {
 function getPlayerInfo(value, prop) {
     var result = {}; 
 
-    for (player in config.players) {
+    for (var player in config.players) {
         if (player[prop] == value) {
             result = player;
         }
     }
 
     // TODO: Error handling for no player object found
-    return player;
+    return result;
 }
 
 function getCharacterInfo(characterName) {
@@ -355,6 +356,16 @@ function getCharacterInfo(characterName) {
 
     // TODO: Error handling for no characer info found
     return characterInfo;
+}
+
+function shuffle(array) {
+    var j, x, i;
+    for (i = array.length; i; i--) {
+        j = Math.floor(Math.random() * i);
+        x = array[i - 1];
+        array[i - 1] = array[j];
+        array[j] = x;
+    }
 }
 
 /*******************************************************
@@ -441,7 +452,7 @@ var handlers = {
     'AllCharactersAssignedIntent': function() {
 
 
-    }
+    },
     'startGame': function() {
         var getNumber = StartGame.getNumber();
 
@@ -565,3 +576,11 @@ function getPlayerActionsFromTwilio() {
 
     return playerActions;
 }
+
+function getMessagesFromTwilio() {}
+
+/*******************************************************
+* Run Main game
+********************************************************/
+
+mainGame();
