@@ -109,16 +109,10 @@ var config = {
 // End Game
 
 
-
-
 // chunked Game
 function startGame() {
     config.history.phase = 0;
-    sayIntro();
-    sayInstructions();
-
     config.history.askForNumberStart = Date.now();
-
 }
 
 function receivedPhoneNumbers() {
@@ -142,15 +136,10 @@ function startRound() {
     var votes = [];
     config.protectedPlayers = []; // Clear protectedPlayers at start of each round
     config.roundNumber = config.roundNumber++;
-
-    sayNightDeath(config.nightDeathCharacter);
-    sayStartDeliberation();
 }
 
 function endDeliberationStartVoting() {
     config.history.phase = 3;
-    sayEndDeliberation();
-
     roundHistory.dayKillVoteStart = Date.now();
 }
 
@@ -162,21 +151,14 @@ function endVotingStartNight() {
     var deadPlayerName = resolveVotes(votes);
     resolveDeath(deadPlayerName);
 
-    sayDayDeath(deadPlayerName);
-
     evaluateEndCondition();
-
-    if (config.state.gameOver) {
-        return;
-    }
- 
     roundHistory.nightActionStart = Date.now();
-    sayNightStart();
+
 }
 
 function endNight() {
     config.history.phase = 5;
-    sayNightEnd();
+    
     roundHistory.nightActionEnd = Date.now();
     config.history.rounds.push(roundHistory);
 
@@ -184,77 +166,11 @@ function endNight() {
     resolvePlayerActions(actions);
     evaluateEndCondition();
 
+    // there's going to be a bug here
     if (!config.state.gameOver) {
-        this.emit('startRound');
+        startRound();
     }
 }
-
-
-// entire game -- not run anymore use broken up version above
-function mainGame() {
-    sayIntro();
-    sayInstructions();
-
-    config.history.askForNumberStart = Date.now();
-
-    // pause // wait 30 seconds // Or get intent to continue
-    // Alexa Pause
-    config.history.askForNumberEnd = Date.now();
-    var players = getPlayersFromTwilio();
-
-    for (player in players) {
-        addPlayer(player.name, player.phoneNumber);
-    }
-
-    setCharacters();
-
-    while (!config.state.gameOver) {
-        playRound();
-    }
-
-    sayOutro();
-}
-
-function playRound() {
-    var roundHistory = {};
-    var actions = [];
-    var votes = [];
-    config.protectedPlayers = []; // Clear protectedPlayers at start of each round
-    config.roundNumber = config.roundNumber++;
-
-    sayNightDeath(config.nightDeathCharacter);
-    sayStartDeliberation();
-    // Pause for a bit
-    sayEndDeliberation();
-
-    roundHistory.dayKillVoteStart = Date.now();
-    // Pause. ToDo: Need way of making async behavior synchronous
-    roundHistory.dayKillVoteEnd = Date.now();
-
-    votes = getPlayerVotesFromTwilio(roundHistory.dayKillVoteStart, roundHistory.dayKillVoteEnd);
-    var deadPlayerName = resolveVotes(votes);
-    resolveDeath(deadPlayerName);
-
-    sayDayDeath(deadPlayerName);
-
-    evaluateEndCondition();
-
-    if (config.state.gameOver) {
-        return;
-    }
- 
-    roundHistory.nightActionStart = Date.now();
-    sayNightStart();
-    // pause ToDo: Need way of making async behavior synchronous
-    sayNightEnd();
-    roundHistory.nightActionEnd = Date.now();
-    config.history.rounds.push(roundHistory);
-
-    actions = getPlayerActionsFromTwilio(roundHistory.nightActionStart, roundHistory.nightActionEnd);
-    resolvePlayerActions(actions);
-    evaluateEndCondition();
-}
-
 
 /*******************************************************
 * Game Play Functions
@@ -462,18 +378,7 @@ function shuffle(array) {
 * Alexa Speaks
 ********************************************************/
 
-function sayIntro() {
-    console.log('sayIntro');
-    this.emit(':tell', 'sayIntro');
-}
-function sayInstructions() {
-    console.log('sayInstructions');
-    this.emit(':tell', 'sayInstructions');
-}
-function sayCharacterRoles() {
-    console.log('sayCharacterRoles');
-    this.emit(':tell', 'sayCharacterRoles');
-}
+
 function sayDayDeath() {
     console.log('sayDayDeath');
     this.emit(':tell', 'sayDayDeath');
@@ -485,10 +390,6 @@ function sayNightDeath() {
 function sayOutro() {
     console.log('sayOutro');
     this.emit(':tell', 'sayOutro');
-}
-function sayStartDeliberation() {
-    console.log('sayStartDeliberation');
-    this.emit(':tell', 'sayStartDeliberation');
 }
 function sayEndDeliberation() {
     console.log('sayEndDeliberation');
@@ -508,23 +409,36 @@ function sayNightEnd() {
 ********************************************************/
 
 var handlers = {
-    'LaunchRequest': function () {
-        this.emit('startGame');
+    'LaunchRequest': function (req, res) {
+        startGame();
+        this.emit(':tell', 'sayIntro');
+        this.emit(':tell', 'sayInstructions');
     },
     'PhoneNumberContinueIntent': function () {
-        this.emit('receivedPhoneNumbers');
+        receivedPhoneNumbers();
+        this.emit(':tell', 'sayNightDeath');
+        this.emit(':tell', 'sayStartDeliberation');
     },
-    'StartRoundIntent': function () {
-        this.emit('startRound');
-    },
+    // 'StartRoundIntent': function () {
+    //     startRound();
+        
+    // },
     'endDeliberationIntent': function () {
-        this.emit('endDeliberation');
+        endDeliberation();
+        that.emit(':tell', 'sayEndDeliberation');
     },
     'endVotingStartNightIntent': function () {
-        this.emit('endVotingStartNight');
+        endVotingStartNight();
+        if (config.state.gameOver) {
+            that.emit(':tell', 'sayNightStart');
+            that.emit(':tell', 'sayDayDeath'); // playerName
+        } else {
+            that.emit(':tell', 'sayNightStart');
+        }
     },
     'endNightIntent': function () {
-        this.emit('endNight');
+        endNight();
+        this.emit(':tell', 'sayNightEnd');
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = "You can say tell me we're ready to go, or, you can say exit... What can I help you with?";
@@ -678,4 +592,4 @@ function getPlayerActionsFromTwilio() {
 * Run Main game
 ********************************************************/
 
-mainGame();
+// mainGame();
