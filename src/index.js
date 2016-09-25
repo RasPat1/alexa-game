@@ -1,4 +1,4 @@
-'use strict';
+¡'use strict';
 
 /*******************************************************
 * Intialize App
@@ -13,7 +13,7 @@ var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
 //OPTIONAL: replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
-var APP_ID = "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793"; 
+var APP_ID = "amzn1.echo-sdk-ams.app.78c5e44b-3bb9-4710-a59d-cb8a34d32793";
 var SKILL_NAME = 'Catskill';
 
 exports.handler = function(event, context, callback) {
@@ -157,7 +157,7 @@ function playRound() {
     if (config.state.gameOver) {
         return;
     }
- 
+
     roundHistory.nightActionStart = Date.now();
     sayNightStart();
     // pause ToDo: Need way of making async behavior synchronous
@@ -322,7 +322,7 @@ function getPlayerActions() {
             character: playerInfo.character,
             action: playerAction
         }
-        
+
         actions.push(actionObj);
     }
 
@@ -338,7 +338,7 @@ function sortByCharacterPriority(actions) {
 }
 
 function getPlayerInfo(value, prop) {
-    var result = {}; 
+    var result = {};
 
     for (var player in config.players) {
         if (player[prop] == value) {
@@ -379,43 +379,45 @@ function shuffle(array) {
 
 function sayIntro() {
     console.log('sayIntro');
-    this.emit(':tell', 'sayIntro');
+    this.emit(':tell', 'Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. Sheriff Katz {need better name} was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose! The town doctor has concurred that the killer is suffering from Rabies Nocturnum, a rare form of the disease that only displays symptoms at night. What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. All players, text your name to {phone number} to begin the cat hunt.
+    ');
 }
 function sayInstructions() {
     console.log('sayInstructions');
-    this.emit(':tell', 'sayInstructions');
+    this.emit(':tell', 'If you do not know, now you know.');
 }
 function sayCharacterRoles() {
     console.log('sayCharacterRoles');
-    this.emit(':tell', 'sayCharacterRoles');
+    this.emit(':tell', 'if you do not know, now you know.');
 }
 function sayDayDeath() {
     console.log('sayDayDeath');
-    this.emit(':tell', 'sayDayDeath');
+    this.emit(':tell', '{person with the most votes}, you have been found wanted. It is to be death by yarn strangulation! Unfortunately, we can’t know if that was the right decision. No turning back now.
+    ');
 }
 function sayNightDeath() {
     console.log('sayNightDeath');
-    this.emit(':tell', 'sayNightDeath');
+    this.emit(':tell', 'Night death!');
 }
 function sayOutro() {
     console.log('sayOutro');
-    this.emit(':tell', 'sayOutro');
+    this.emit(':tell', 'Life moves on. Cats will endure!');
 }
 function sayStartDeliberation() {
     console.log('sayStartDeliberation');
-    this.emit(':tell', 'sayStartDeliberation');
+    this.emit(':tell', 'You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
 }
 function sayEndDeliberation() {
     console.log('sayEndDeliberation');
-    this.emit(':tell', 'sayEndDeliberation');
+    this.emit(':tell', 'Times up. Send in your vote now!');
 }
 function sayNightStart() {
     console.log('sayNightStart');
-    this.emit(':tell', 'sayNightStart');
+    this.emit(':tell', 'Night has fallen.');
 }
 function sayNightEnd() {
     console.log('sayNightEnd');
-    this.emit(':tell', 'sayNightEnd');
+    this.emit(':tell', 'Here comes the sun!');
 }
 /*******************************************************
 * Intent Mappping
@@ -458,31 +460,31 @@ function getTwilioJSON(lowerTimeBound, upperTimeBound, gameContext){
                 case "Action":
                     gameContainer.push({playerAction: message.body, phoneNumber: message.from});
                     break;
-                
+
                 case "Vote":
                     gameContainer.push({name: message.body});
-                    break;    
-                
+                    break;
+
                 case "Start":
                     gameContainer.push({name: message.body, phoneNumber: message.from});
-                    break;    
-                    
+                    break;
+
                 }
             }
         });
-    });   
+    });
     return gameContainer;
 }
 
 
 function sendTwilioText(playerNumber, message){
-    client.messages.create({ 
-    to: playerNumber, 
-    from: fromNumber, 
-    body: message, 
-    }, function(err, message) { 
-        console.log(message.sid); 
-    }); 
+    client.messages.create({
+    to: playerNumber,
+    from: fromNumber,
+    body: message,
+    }, function(err, message) {
+        console.log(message.sid);
+    });
 }
 
 
