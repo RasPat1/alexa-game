@@ -1,0 +1,33 @@
+{
+  "name": "catskill",
+  "version": "1.0.0",
+  "description": "This is a game you can play on Alexa with your friends!  Find it published on teh alexa skill store.  Have fun.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RasPat1/alexa-game.git"
+  },
+  "keywords": [
+    "cats",
+    "alexa",
+    "skill",
+    "cats",
+    "kill",
+    "mafia",
+    "werewolf",
+    "assassin",
+    "game"
+  ],
+  "author": "Shur Singh, Casey Lakritz, Rasesh Patel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RasPat1/alexa-game/issues"
+  },
+  "homepage": "https://github.com/RasPat1/alexa-game#readme",
+  "dependencies": {
+    "alexa-sdk": "^1.0.6"
+  }
+}
