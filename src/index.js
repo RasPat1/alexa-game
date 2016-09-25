@@ -58,11 +58,27 @@ var config = {
     ],
     protectedPlayerNames: [],
     state: {
+        roundNumber: 0,
         charactersAssigned: false,
         gameOver: false,
         villainWin: false,
         heroWin: false
-    }
+    },
+    history: {
+        askForNumberStart: null,
+        askForNumberEnd: null,
+        rounds: [
+        /* sample
+            {
+                dayKillVoteStart: 12341234123,
+                dayKillVoteEnd: 12312312342,
+
+                nightActionStart: 1345345,
+                nightActionEnd: 123412315
+            }
+        */
+        ]
+    } // history of the game
 };
 
 
@@ -87,10 +103,14 @@ function mainGame() {
     sayIntro();
     sayInstructions();
     // pause // TODO: How do we handle app state stuff?
+    config.history.askForNumberStart = Date.now();
+    // pause // wait 30 seconds // Or get intent to continue
+    // Alexa Pause
+    config.history.askForNumberEnd = Date.now();
     var players = getPlayersFromTwilio();
 
     for (player in players) {
-        addPlayer(player.content, player.phoneNumbers);
+        addPlayer(player.name, player.phoneNumber);
     }
 
     setCharacters();
@@ -103,13 +123,41 @@ function mainGame() {
 }
 
 function playRound() {
+    var roundHistory = {};
+    var actions = [];
+    var votes = [];
     config.protectedPlayers = []; // clear protectedPlayers at start of each round
+    config.roundNumber = config.roundNumber++;
 
     sayNightDeath();
     startDeliberation();
-    openUpForTexts();
+    endDeliberation();
+
+    roundHistory.dayKillVoteStart = Date.now();
     // Pause. ToDo: Need way of making async behavior synchronous
-    resolvePlayerActions();
+    roundHistory.dayKillVoteEnd = Date.now();
+
+    votes = getPlayerVotesFromTwilio(roundHistory.dayKillVoteStart, roundHistory.dayKillVoteEnd);
+    var deadPlayer = resolveVotes(votes);(
+    resolveDeath(deadPlayerName);
+
+    sayDayDeath();
+
+    evaluateEndCondition();
+
+    if (config.state.gameOver) {
+        return;
+    }
+ 
+    roundHistory.nightActionStart = Date.now();
+    sayNightStart();
+    // pause ToDo: Need way of making async behavior synchronous
+    sayNightEnd();
+    roundHistory.nightActionEnd = Date.now();
+    config.config.history.rounds.append(roundHistory);
+
+    actions = getPlayerActionsFromTwilio(roundHistory.nightActionStart, roundHistory.nightActionEnd);
+    resolvePlayerActions(actions);
     evaluateEndCondition();
 }
 
@@ -186,9 +234,35 @@ function evaluateEndCondition() {
     config.state.gameOver = villainWin || heroWin;
 }
 
-function resolvePlayerActions() {
-    var actions = getPlayerActions();
+function VotesDeath(votes) {
+    var max = -1;
+    var voteCounts = {};
+    var playerName;
 
+    for (var vote in votes) {
+        if (!voteCounts.hasOwnProperty(vote.name)) {
+            voteCounts[vote.name] = 0;
+        }
+        voteCounts[vote.name]++;
+    }
+
+    for (var voteName in voteCounts) {
+        if (voteCounts.hasOwnProperty(voteName)) {
+            if (voteCounts[voteName] > max) {
+                playerName = voteName
+            }
+        }
+    }
+
+    return playerName;
+}
+
+function resolveDeath(name) {
+    var playerInfo = getPlayerInfo(name, 'name');
+    playerInfo.isAlive = false;
+}
+
+function resolvePlayerActions(actions) {
     sortByCharacterPriority(actions); // TODO check that the sort modifies the array
 
     for (action in actions) {
@@ -377,4 +451,50 @@ function sanitizeNames(name) {
     name = name.replace(/[^a-zA-Z]+/g, "");
 
     return name.toLowerCase();
+}
+
+// get all the players that reginstered in the registration time window
+function getPlayersFromTwilio() {
+    var startWindow = config.history.askForNumberStart;
+    var endWindow = config.history.askForNumberEnd;
+
+    // idk how to process these...
+    var messages = getMessagesFromTwilio(startWindow, endWindow);
+
+    var players;
+
+    /*
+    players = [
+        {
+            name: name,
+            phoneNumber: phoneNumber
+
+        },
+        {
+            name: name,
+            phoneNumber: phoneNumber
+
+        },
+
+    ]
+*/
+    return players;
+}
+
+function getPlayerVotesFromTwilio() {
+    var startWindow = config.history.nightActionStart;
+    var endWindow = config.history.nightActionStart;
+
+    // idk how to process these...
+    var messages = getMessagesFromTwilio(startWindow, endWindow);
+
+}
+
+function getPlayerActionsFromTwilio() {
+    var startWindow = config.history.dayKillVoteStart;
+    var endWindow = config.history.dayKillVoteEnd;
+
+    // idk how to process these...
+    var messages = getMessagesFromTwilio(startWindow, endWindow);
+
 }
