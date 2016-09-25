@@ -6,6 +6,12 @@
 
 var Alexa = require('alexa-sdk');
 
+//Twilio info
+var accountSid = 'AC2a896186008e9b0cad3bdd16831006e7';
+var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
+var fromNumber = '6317598355';
+var client = require('twilio')(accountSid, authToken);
+
 //OPTIONAL: replace with "amzn1.echo-sdk-ams.app.[your-unique-value-here]";
 var APP_ID = undefined; 
 var SKILL_NAME = 'Catskill';
@@ -482,6 +488,45 @@ var handlers = {
 /*******************************************************
 * Twilio Integration
 ********************************************************/
+function getTwilioJSON(lowerTimeBound, upperTimeBound, gameContext){
+    var gameContainer = [];
+    var twilioJSON = client.messages.list({to: fromNumber}, function(err, data) {
+        data.messages.forEach(function(message) {
+            var messageTime = Date.parse(message.dateSent);
+            if ( messageTime > lowerTimeBound && messageTime < upperTimeBound ){
+            switch (gameContext){
+                case "Action":
+                    gameContainer.push({playerAction: message.body, phoneNumber: message.from});
+                    break;
+                
+                case "Vote":
+                    gameContainer.push({name: message.body});
+                    break;    
+                
+                case "Start":
+                    gameContainer.push({name: message.body, phoneNumber: message.from});
+                    break;    
+                    
+                }
+            }
+        });
+    });   
+    return gameContainer;
+}
+
+
+function sendTwilioText(playerNumber, message){
+    client.messages.create({ 
+    to: playerNumber, 
+    from: fromNumber, 
+    body: message, 
+    }, function(err, message) { 
+        console.log(message.sid); 
+    }); 
+}
+
+
+
 
 // Formats names to be predictable in app
 function sanitizeNames(name) {
@@ -505,9 +550,8 @@ function getPlayersFromTwilio() {
     var endWindow = config.history.askForNumberEnd;
 
     // idk how to process these...
-    var messages = getMessagesFromTwilio(startWindow, endWindow);
+    return getTwilioJSON(startWindow, endWindow, "Start");
 
-    var players;
 
     /*
     players = [
@@ -524,7 +568,6 @@ function getPlayersFromTwilio() {
 
     ]
 */
-    return players;
 }
 
 function getPlayerVotesFromTwilio() {
@@ -536,19 +579,19 @@ function getPlayerVotesFromTwilio() {
     var messages = getMessagesFromTwilio(startWindow, endWindow);
 
 
+   return getTwilioJSON(startWindow, endWindow, "Action");
+
+
+
     /*
     votes = [
         {
             name: name,
-        },
-        {
-            name: name,
-        },
+        }
 
     ]
     */
 
-    return votes;
 }
 
 function getPlayerActionsFromTwilio() {
@@ -557,7 +600,8 @@ function getPlayerActionsFromTwilio() {
     var endWindow = config.history.dayKillVoteEnd;
 
     // idk how to process these...
-    var messages = getMessagesFromTwilio(startWindow, endWindow);
+    return getTwilioJSON(startWindow, endWindow, "Action");
+
 
     /*
     playerActions = [
@@ -574,10 +618,8 @@ function getPlayerActionsFromTwilio() {
     ]
 */
 
-    return playerActions;
 }
 
-function getMessagesFromTwilio() {}
 
 /*******************************************************
 * Run Main game
