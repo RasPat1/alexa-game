@@ -6,3 +6,7 @@ LaunchRequest start
 LaunchRequest initiate
 LaunchRequest go
 LaunchRequest launch
+PhoneNumberContinueIntent phones are good
+endDeliberationIntent done deciding
+endVotingStartNightIntent end voting
+endNightIntent end night
