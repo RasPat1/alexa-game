@@ -12,9 +12,11 @@ var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
 var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
+// App Specific Info
 var APP_ID = "amzn1.ask.skill.78c5e44b-3bb9-4710-a59d-cb8a34d32793";
 var SKILL_NAME = 'Catskill';
 
+// Boilerplate Alexa
 exports.handler = function(event, context, callback) {
     var alexa = Alexa.handler(event, context);
     alexa.appId = APP_ID;
@@ -26,7 +28,7 @@ exports.handler = function(event, context, callback) {
 * Game State
 ********************************************************/
 
-var characterNames = {VILLAGER: 'villager', VILLAIN: 'werewolf', DOCTOR: 'doctor'};
+var characterNames = {VILLAGER: 'villager', VILLAIN: 'werecat', DOCTOR: 'doctor'};
 
 var config = {
     allCharacters: [characterNames.VILLAGER, characterNames.VILLAIN, characterNames.DOCTOR],
@@ -63,7 +65,7 @@ var config = {
         */
     ],
     protectedPlayerNames: [],
-    nightDeathCharacter: null, // updated everynight if someon died
+    nightDeathCharacter: null, // updated everynight if someone died
     state: {
         roundNumber: 0,
         charactersAssigned: false,
@@ -72,7 +74,7 @@ var config = {
         heroWin: false,
         phase: 0
     },
-    history: {
+    history: {  // history of the game
         askForNumberStart: null,
         askForNumberEnd: null,
         rounds: [
@@ -86,7 +88,7 @@ var config = {
             }
         */
         ]
-    } // history of the game
+    }
 };
 
 
@@ -117,7 +119,7 @@ function startGame() {
 function receivedPhoneNumbers() {
     config.history.phase = 1;
     config.history.askForNumberEnd = Date.now();
-    var players = getPlayersFromTwilio();
+    var players = getPlayersFromTwilio(config.history.askForNumberStart, config.history.askForNumberEnd);
 
     for (player in players) {
         addPlayer(player.name, player.phoneNumber);
@@ -126,6 +128,7 @@ function receivedPhoneNumbers() {
     setCharacters();
 
     startRound();
+
 }
 
 function startRound() {
@@ -189,14 +192,17 @@ function addPlayer(name, phoneNumber) {
 // Assign Characters once all players have been added
 // Call only once per game
 function setCharacters() {
-    if (config.charactersAssigned == true) {
+    if (config.charactersAssigned == true) { // This almost certainly will never get triggered
         // TODO: Handle Error
         return;
     }
 
-    var allCharacters = config.allCharacters // getCharacterConfig(var numberOfCharacters)
-    var shuffledCharacters = shuffle(allCharacters);
+    // ToDo: getCharacterConfig(var numberOfCharacters)
+    var allCharacters = config.allCharacters
+    var shuffledCharacters = shuffle(allCharacters); 
 
+
+    //ToDo: Allow multiple of same characters
     for (character in shuffledCharacters) {
         config.players[i].characterName = character;
     }
@@ -393,18 +399,23 @@ function shuffle(array) {
 //     console.log('sayStartDeliberation');
 //     this.emit(':tell', 'You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
 // }
-function sayEndDeliberation() {
-    console.log('sayEndDeliberation');
-    this.emit(':tell', 'Times up. Send in your vote now!');
+// function sayEndDeliberation() {
+//     console.log('sayEndDeliberation');
+//     this.emit(':tell', 'Times up. Send in your vote now!');
+// }
+// function sayNightStart() {
+//     console.log('sayNightStart');
+//     this.emit(':tell', 'Night has fallen.');
+// }
+// function sayNightEnd() {
+//     console.log('sayNightEnd');
+//     this.emit(':tell', 'Here comes the sun!');
+// }
+
+function getNgihtDeathStory() {
+    return "a guy died in the night";
 }
-function sayNightStart() {
-    console.log('sayNightStart');
-    this.emit(':tell', 'Night has fallen.');
-}
-function sayNightEnd() {
-    console.log('sayNightEnd');
-    this.emit(':tell', 'Here comes the sun!');
-}
+
 /*******************************************************
 * Intent Mappping
 ********************************************************/
@@ -412,17 +423,14 @@ function sayNightEnd() {
 var handlers = {
     'LaunchRequest': function () {
         startGame();
-        this.emit(':tell', '<audio>https://s3.amazonaws.com/catskill/win_cat_theme2.mp3</audio> Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. Sheriff Katz {need better name} was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose!  What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. All players, text your name to 6 3 1 7 5 9 8 3 5 5 to begin the cat hunt.');
+        var numberString = getAlexaPhoneNumber();
+        // TODO: Get audio tags to work
+        this.emit(':tell', "<audio>https://s3.amazonaws.com/catskill/win_cat_theme2.mp3</audio> Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. All players, text your name to " + numberString + " to begin the cat hunt and tell me when you're ready to win this motherfucker.");
     },
     'PhoneNumberContinueIntent': function () {
         receivedPhoneNumbers();
-        this.emit(':tell', 'Night death!');
-        this.emit(':tell', 'You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
+        this.emit(':tell', 'Sheriff Katz was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose!  What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
     },
-    // 'StartRoundIntent': function () {
-    //     startRound();
-        
-    // },
     'endDeliberationIntent': function () {
         endDeliberation();
         this.emit(':tell', 'Times up. Send in your vote now!');
@@ -463,25 +471,29 @@ var handlers = {
 /*******************************************************
 * Twilio Integration
 ********************************************************/
-function getTwilioJSON(lowerTimeBound, upperTimeBound, gameContext){
+function getTwilioJSON(lowerTimeBound, upperTimeBound, gameContext) {
     var gameContainer = [];
     var twilioJSON = client.messages.list({to: fromNumber}, function(err, data) {
         data.messages.forEach(function(message) {
             var messageTime = Date.parse(message.dateSent);
-            if ( messageTime > lowerTimeBound && messageTime < upperTimeBound ){
-            switch (gameContext){
+            if (messageTime > lowerTimeBound && messageTime < upperTimeBound) {
+            switch (gameContext) {
                 case "Action":
                     gameContainer.push({playerAction: message.body, phoneNumber: message.from});
                     break;
 
                 case "Vote":
-                    gameContainer.push({name: message.body});
+                    var voteName = sanitizeNames(message.body);
+                    gameContainer.push({name: voteName});
                     break;
 
                 case "Start":
-                    gameContainer.push({name: message.body, phoneNumber: message.from});
+                    var startName = sanitizeNames(message.body);
+                    gameContainer.push({name: startName, phoneNumber: message.from});
                     break;
 
+                default:
+                    break; // return empty gameContainer on unknown gameContext
                 }
             }
         });
@@ -490,7 +502,7 @@ function getTwilioJSON(lowerTimeBound, upperTimeBound, gameContext){
 }
 
 
-function sendTwilioText(playerNumber, message){
+function sendTwilioText(playerNumber, message) {
     client.messages.create({
     to: playerNumber,
     from: fromNumber,
@@ -499,9 +511,6 @@ function sendTwilioText(playerNumber, message){
         console.log(message.sid);
     });
 }
-
-
-
 
 // Formats names to be predictable in app
 function sanitizeNames(name) {
@@ -564,11 +573,7 @@ function getPlayerVotesFromTwilio() {
 
 }
 
-function getPlayerActionsFromTwilio() {
-    var playerActions = [];
-    var startWindow = config.history.dayKillVoteStart;
-    var endWindow = config.history.dayKillVoteEnd;
-
+function getPlayerActionsFromTwilio(startWindow, endWindow) {
     return getTwilioJSON(startWindow, endWindow, "Action");
 
     /*
@@ -588,9 +593,6 @@ function getPlayerActionsFromTwilio() {
 
 }
 
-
-/*******************************************************
-* Run Main game
-********************************************************/
-
-// mainGame();
+function getAlexaPhoneNumber() {
+    return "6 3 1 7 5 9 8 3 5 5";
+}
