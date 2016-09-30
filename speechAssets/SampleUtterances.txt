@@ -7,6 +7,40 @@ LaunchRequest initiate
 LaunchRequest go
 LaunchRequest launch
 PhoneNumberContinueIntent phones are good
+PhoneNumberContinueIntent we are ready
+PhoneNumberContinueIntent we're ready
+PhoneNumberContinueIntent let's go
+PhoneNumberContinueIntent ready
+PhoneNumberContinueIntent we're all set
+PhoneNumberContinueIntent we are all set
+PhoneNumberContinueIntent start game
+PhoneNumberContinueIntent let's start
 endDeliberationIntent done deciding
+endDeliberationIntent we're done
+endDeliberationIntent we're ready
+endDeliberationIntent we know who the killer is
+endDeliberationIntent time to kill someone
+endDeliberationIntent we know who it is
 endVotingStartNightIntent end voting
+endVotingStartNightIntent we're done
+endVotingStartNightIntent we're done voting
+endVotingStartNightIntent done
+endVotingStartNightIntent done voting
+endVotingStartNightIntent we figured it out
+endVotingStartNightIntent we're ready
+endVotingStartNightIntent ready
+endVotingStartNightIntent let's go
+endVotingStartNightIntent let's move on
 endNightIntent end night
+endNightIntent night's over
+endNightIntent night is over
+endNightIntent we're done
+endNightIntent we are done
+endNightIntent we're ready
+endNightIntent we are ready
+endNightIntent let's move on
+endNightIntent let's go
+endNightIntent next
+endNightIntent next move
+endNightIntent next round
+endNightIntent go to the next round
