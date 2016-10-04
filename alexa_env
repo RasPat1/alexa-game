@@ -1,0 +1,2 @@
+export APP_PATH="/users/$(whoami)/dev/alexa/alexa-game"
+alias deployAlexa="cd /users/rasesh/dev/alexa/alexa-game && zip app.zip src/* && aws lambda update-function-code --function-name Catskill --zip-file fileb://app.zip"

@@ -378,7 +378,9 @@ function shuffle(array) {
         array[j] = x;
     }
 }
-// ALexa Speaks
+/*******************************************************
+* Alexa Speaks
+********************************************************/
 
 // function sayInstructions() {
 //     this.emit(':tell', 'If you do not know, now you know.');
@@ -412,7 +414,7 @@ function shuffle(array) {
 //     this.emit(':tell', 'Here comes the sun!');
 // }
 
-function getNgihtDeathStory() {
+function getNightDeathStory() {
     return "a guy died in the night";
 }
 
@@ -429,7 +431,7 @@ var handlers = {
     },
     'PhoneNumberContinueIntent': function () {
         receivedPhoneNumbers();
-        this.emit(':tell', 'Sheriff Katz was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose!  What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect.');
+        this.emit(':tell', 'Sheriff Katz was found murdered early this morning, locked in one of his own cells. His throat slit and traces of white foam down his neck. We have a rabies infected murderer on the loose!  What the fuck do we do?! The town has congregated at the court house to deliberate on what to do. You have three minutes to deliberate on who the killer may be. After that time, you will send in your vote. Be wary of your fellow towns people. Everyone is a suspect. Begin deliberating now!');
     },
     'endDeliberationIntent': function () {
         endDeliberation();
