@@ -425,7 +425,7 @@ function getNightDeathStory() {
 var handlers = {
     'LaunchRequest': function () {
         startGame();
-        var numberString = getAlexaPhoneNumber();
+        var numberString = getAlexaPhoneNumber(fromNumber);
         // TODO: Get audio tags to work
         this.emit(':tell', "<audio>https://s3.amazonaws.com/catskill/win_cat_theme2.mp3</audio> Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. All players, text your name to " + numberString + " to begin the cat hunt and tell me when you're ready to win this motherfucker.");
     },
@@ -595,6 +595,7 @@ function getPlayerActionsFromTwilio(startWindow, endWindow) {
 
 }
 
-function getAlexaPhoneNumber() {
-    return "6 3 1 7 5 9 8 3 5 5";
+function getAlexaPhoneNumber(appNumber) {
+    //appNumber is a string of digits
+    return appNumber.split("").join(" ");
 }
