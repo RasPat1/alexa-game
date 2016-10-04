@@ -1,11 +1,10 @@
-LaunchRequest start game
-LaunchRequest let's play
-LaunchRequest begin
-LaunchRequest engage
-LaunchRequest start
-LaunchRequest initiate
-LaunchRequest go
-LaunchRequest launch
+LaunchRequest start Cat Assassin
+LaunchRequest start game Cat Assassin
+LaunchRequest open app Cat Assassin
+LaunchRequest let's play Cat Assassin
+LaunchRequest play Cat Assassin
+LaunchRequest open Cat Assassin
+LaunchRequest launch Cat Assassin
 PhoneNumberContinueIntent phones are good
 PhoneNumberContinueIntent we are ready
 PhoneNumberContinueIntent we're ready
@@ -15,19 +14,30 @@ PhoneNumberContinueIntent we're all set
 PhoneNumberContinueIntent we are all set
 PhoneNumberContinueIntent start game
 PhoneNumberContinueIntent let's start
+PhoneNumberContinueIntent next round
+PhoneNumberContinueIntent go
 endDeliberationIntent done deciding
 endDeliberationIntent we're done
+endDeliberationIntent we are done
 endDeliberationIntent we're ready
+endDeliberationIntent we are ready
+endDeliberationIntent ok
+endDeliberationIntent next
+endDeliberationIntent ok, go
+endDeliberationIntent go
 endDeliberationIntent we know who the killer is
 endDeliberationIntent time to kill someone
 endDeliberationIntent we know who it is
 endVotingStartNightIntent end voting
 endVotingStartNightIntent we're done
+endVotingStartNightIntent we are done
 endVotingStartNightIntent we're done voting
+endVotingStartNightIntent we are done
 endVotingStartNightIntent done
 endVotingStartNightIntent done voting
 endVotingStartNightIntent we figured it out
 endVotingStartNightIntent we're ready
+endVotingStartNightIntent we are ready
 endVotingStartNightIntent ready
 endVotingStartNightIntent let's go
 endVotingStartNightIntent let's move on
@@ -44,3 +54,4 @@ endNightIntent next
 endNightIntent next move
 endNightIntent next round
 endNightIntent go to the next round
+endNightIntent go
