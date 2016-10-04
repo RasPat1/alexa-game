@@ -23,7 +23,7 @@ endDeliberationIntent we're ready
 endDeliberationIntent we are ready
 endDeliberationIntent ok
 endDeliberationIntent next
-endDeliberationIntent ok, go
+endDeliberationIntent ok go
 endDeliberationIntent go
 endDeliberationIntent we know who the killer is
 endDeliberationIntent time to kill someone
