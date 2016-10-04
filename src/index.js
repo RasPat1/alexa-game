@@ -378,7 +378,9 @@ function shuffle(array) {
         array[j] = x;
     }
 }
-// ALexa Speaks
+/*******************************************************
+* Alexa Speaks
+********************************************************/
 
 // function sayInstructions() {
 //     this.emit(':tell', 'If you do not know, now you know.');
@@ -412,7 +414,7 @@ function shuffle(array) {
 //     this.emit(':tell', 'Here comes the sun!');
 // }
 
-function getNgihtDeathStory() {
+function getNightDeathStory() {
     return "a guy died in the night";
 }
 
