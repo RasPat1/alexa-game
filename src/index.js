@@ -7,8 +7,8 @@
 var Alexa = require('alexa-sdk');
 
 //Twilio info
-var accountSid = 'AC2a896186008e9b0cad3bdd16831006e7';
-var authToken = 'e21d773eb1ed8769629890e0a4fc38fd';
+var accountSid = '<ACCOUNT_SID>';
+var authToken = '<AUTH_TOKEN>';
 var fromNumber = '6317598355';
 var client = require('twilio')(accountSid, authToken);
 
@@ -427,7 +427,8 @@ var handlers = {
         startGame();
         var numberString = getAlexaPhoneNumber(fromNumber);
         // TODO: Get audio tags to work
-        this.emit(':tell', "<audio>https://s3.amazonaws.com/catskill/win_cat_theme2.mp3</audio> Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. All players, text your name to " + numberString + " to begin the cat hunt and tell me when you're ready to win this motherfucker.");
+        // <audio>https://s3.amazonaws.com/catskill/win_cat_theme2.mp3</audio> 
+        this.emit(':tell', "Welcome to Catville. A place known far and wide for it’s rolling hills, humble architecture, and endless supply of yarn. The citizens of this quaint little village have lived here in peace for decades. That is… until last night. All players, text your name to " + numberString + " to begin the cat hunt and tell me when you're ready to win this motherfucker.");
     },
     'PhoneNumberContinueIntent': function () {
         receivedPhoneNumbers();
