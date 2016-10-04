@@ -593,6 +593,7 @@ function getPlayerActionsFromTwilio(startWindow, endWindow) {
 
 }
 
-function getAlexaPhoneNumber() {
-    return "6 3 1 7 5 9 8 3 5 5";
+function getAlexaPhoneNumber(appNumber) {
+    //appNumber is a string of digits
+    return appNumber.split("").join(" ");
 }
